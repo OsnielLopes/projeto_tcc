@@ -1,4 +1,5 @@
 from functools import reduce
+import time
 
 # --- string utils ---
 def clean(s):
@@ -28,24 +29,30 @@ def distance(groups):
                 min_value['pos'] = (index_a, index_b)
             line.append(minor_distance)
         distance_matrix.append(line)
-    return distance_matrix, min_value
+    return distance_matrix, min_value # unnecessary to return the distance matrix here
 
 # --- main code ---
-rule = '1'
-f = open('espectros_TXT/'+rule+'.txt', 'r')
-out = open('espectros_out/'+rule+'.txt', 'w')
-groups = []
-f_reader = f.readlines()
-for line in f_reader:
-    groups.append([[float(x) for x in clean(line).split(',')]])
+delta_ts = []
+for rule in range(256):
+    start = time.time()
+    f = open('data/spectra_TXT/'+str(rule)+'.txt', 'r')
+    out = open('data/spectra_out/'+str(rule)+'.txt', 'w')
+    groups = []
+    f_reader = f.readlines()
+    for line in f_reader:
+        groups.append([[float(x) for x in clean(line).split(',')]])
 
-era = 0
-out.write('-----'+str(era)+'-----\n')
-out.write(str(groups)+'\n')
-while len(groups) > 1:
-    era += 1
-    matrix, value = distance(groups)
-    for spectre in groups.pop(value['pos'][1]):
-        groups[value['pos'][0]].append(spectre)
+    era = 0
     out.write('-----'+str(era)+'-----\n')
-    out.write(str(groups)+str(value)+'\n')
+    out.write(str(groups)+'\n')
+    while len(groups) > 1:
+        era += 1
+        matrix, value = distance(groups)
+        for spectre in groups.pop(value['pos'][1]):
+            groups[value['pos'][0]].append(spectre)
+        out.write('-----'+str(era)+'-----\n')
+        out.write(str(groups)+str(value)+'\n')
+    ellapsed_time = time.time() - start
+    print('ellapsed time '+str(ellapsed_time))
+    delta_ts += [ellapsed_time]
+    print('estimated time '+str(sum(delta_ts)/len(delta_ts)*(255-rule)))
